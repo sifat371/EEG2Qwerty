@@ -1,0 +1,27 @@
+diff --git a/brain2qwerty_v1/config/xp_config.py b/brain2qwerty_v1/config/xp_config.py
+--- a/brain2qwerty_v1/config/xp_config.py
++++ b/brain2qwerty_v1/config/xp_config.py
+@@
+-    """Full Brain2Qwerty V1 configuration (SpanishBCBL, MEG)."""
++    """Brain2Qwerty V1 EEG configuration for SpanishBCBL."""
+@@
+-                "name": "Pinet2024Meg",
++                "name": "Pinet2024Eeg",
+@@
+-                "name": "MegExtractor",
++                "name": "EegExtractor",
+                 "frequency": 50,
+                 "filter": (0.1, 20.0),
+                 "baseline": (0.0, 0.2),
+                 "clamp": 5,
+                 "scaler": "RobustScaler",
+                 "infra": {"folder": CACHE, "cluster": None},
+diff --git a/brain2qwerty_v1/main.py b/brain2qwerty_v1/main.py
+--- a/brain2qwerty_v1/main.py
++++ b/brain2qwerty_v1/main.py
+@@
+-        subject_id = ns.extractors.LabelEncoder(event_types="Meg", event_field="subject")
++        subject_id = ns.extractors.LabelEncoder(
++            event_types=self.neuro.event_types,
++            event_field="subject",
++        )
