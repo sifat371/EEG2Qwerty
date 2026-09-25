@@ -1,0 +1,23 @@
+name: Syntax checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile public Python sources
+        run: |
+          python -m compileall -q eeg2qwerty scripts experiments/historical/m0 experiments/historical/m1 experiments/historical/m2
