@@ -1,0 +1,7 @@
+experiment,parameters_m,val_cer_pct,test_cer_pct,status,evaluation_note
+M0,2.679,75.30,74.74,historical,"Earlier internal pipeline; not yet standardized"
+M1,2.684,75.10,74.56,historical,"Earlier internal pipeline; not yet standardized"
+M2,1.640,72.39,72.20,historical,"Earlier internal pipeline; current strongest completed compact baseline"
+M3,13.690,76.78,76.58,historical,"Earlier internal pipeline; geometry-aware ablation"
+M4,6.642,73.15,72.81,historical,"Earlier internal pipeline; residual geometry ablation"
+G1,,72.19,,historical,"Validation result only; graph-temporal ablation"
