@@ -1,0 +1,23 @@
+# NOTICE
+
+EEG2Qwerty is an independent research project for EEG-based typed-sentence decoding.
+
+## Upstream attribution
+
+Parts of the research workflow, interfaces, dataset handling, and/or historical experimental code build upon the public **Brain2Qwerty** project by Meta Platforms, Inc. and affiliates:
+
+https://github.com/facebookresearch/brain2qwerty
+
+The upstream Brain2Qwerty source is distributed under the Creative Commons Attribution-NonCommercial 4.0 International license (CC BY-NC 4.0).
+
+The Brain2Qwerty datasets were collected by and belong to the Basque Center on Cognition, Brain and Language (BCBL). EEG2Qwerty does not redistribute those datasets.
+
+## Independence
+
+EEG2Qwerty is not affiliated with, sponsored by, or endorsed by Meta Platforms, Inc., Meta FAIR, or BCBL.
+
+## Historical imports
+
+Files under `experiments/historical/` may include code developed while working inside a local Brain2Qwerty checkout. Where a file is substantially derived from upstream source code, the applicable upstream copyright and license terms remain in effect.
+
+The repository intentionally avoids importing unrelated Brain2Qwerty v2 code, website assets, or other upstream material that is not necessary to document the EEG2Qwerty work.
