@@ -31,6 +31,8 @@ Current work includes:
 
 Unpublished research directions and experimental hypotheses are intentionally maintained outside the public repository until they are ready for release.
 
+**Migration status:** the repository foundation and historical M0–M2 source are now public. Additional completed, non-sensitive historical experiments are being migrated selectively rather than copying the original development checkout wholesale.
+
 ## Historical experiment lineage
 
 | Experiment | Approx. parameters | Validation CER | Test CER | Public description |
@@ -42,7 +44,7 @@ Unpublished research directions and experimental hypotheses are intentionally ma
 | M4 | 6.642M | 73.15% | 72.81% | Residual geometry variant |
 | G1 | — | 72.19% | — | Graph-temporal ablation |
 
-**Important:** these are historical development results produced with an earlier internal pipeline. They are preserved for research provenance and should **not** yet be treated as directly comparable with the final published Brain2Qwerty EEG result. Standardized benchmark results will be reported separately as models are reproduced under the current evaluation protocol.
+**Important:** these are historical development results produced with an earlier internal pipeline. They are preserved for research provenance and should **not** yet be treated as directly comparable with the final published Brain2Qwerty EEG result. Standardized benchmark results will be reported separately as models are reproduced under the current evaluation protocol. See [docs/history.md](docs/history.md) for the public development lineage.
 
 ## Repository layout
 
