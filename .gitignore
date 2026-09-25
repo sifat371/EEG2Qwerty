@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Large data
+data/
+datasets/
+*.fif
+*.edf
+*.bdf
+*.set
+*.npy
+*.npz
+*.pt
+*.pth
+
+# Training artifacts
+runs/
+checkpoints/
+lightning_logs/
+wandb/
+*.ckpt
+
+# Raw outputs are local; curated results are versioned
+results/raw/
+results/tmp/
+
+# Local configuration
+.env
+*.local.yml
+*.local.yaml
+
+# Build
+build/
+dist/
+*.egg-info/
