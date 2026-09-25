@@ -1,0 +1,1 @@
+experiment,commit_sha,protocol,target,evaluator,seed,parameters,peak_vram_gb,train_time,neural_cer,participant_mean_cer,participant_median_cer,participant_sd_cer,lm_assisted_cer,status,notes
