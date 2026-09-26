@@ -1,6 +1,6 @@
 # Results
 
-This directory contains **curated research results**, not raw training outputs.
+This directory contains **curated research results**, not raw checkpoints or logs.
 
 ## Historical results
 
@@ -10,22 +10,22 @@ They must not be interpreted as standardized comparisons against the final publi
 
 ## Standardized experiment registry
 
-`experiment_registry.csv` defines the public schema for future reproduced runs.
+`experiment_registry.csv` is intentionally empty until a full standardized run is audited and promoted.
 
-A standardized row should include:
+The registry stores:
 
-- Git commit SHA
-- protocol and target
-- evaluator version
+- EEG2Qwerty commit SHA
+- upstream Brain2Qwerty commit SHA
+- protocol/target/evaluator
 - random seed
 - parameter count
-- peak VRAM
+- hardware and peak VRAM
 - training time
 - neural-only CER
-- participant-level CER statistics
+- participant mean/median/SD CER
 - LM-assisted CER when applicable
-- status/notes
+- result status and notes
 
-Raw checkpoints and logs belong under ignored local directories such as `runs/`, `checkpoints/`, or `results/raw/`.
+The training runner first writes a **candidate** `registry_row.csv` inside the ignored run directory. That row should be copied into the curated registry only after the protocol audit passes.
 
-The repository deliberately keeps **historical** and **standardized** measurements separate.
+Raw checkpoints, logs, prediction dumps, and run manifests belong under ignored directories such as `results/raw/`.
