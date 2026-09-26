@@ -4,26 +4,28 @@ This directory contains **curated research results**, not raw training outputs.
 
 ## Historical results
 
-`historical_results.csv` records results obtained during the exploratory development phase. Those runs used an earlier internal training/evaluation pipeline and are retained for provenance.
+`historical_results.csv` records measurements obtained during the exploratory development phase. Those runs used an earlier internal training/evaluation pipeline and are retained for provenance.
 
 They must not be interpreted as standardized comparisons against the final published Brain2Qwerty EEG pipeline.
 
-## Standardized results
+## Standardized experiment registry
 
-Future reproduced experiments should be added separately and include:
+`experiment_registry.csv` defines the public schema for future reproduced runs.
+
+A standardized row should include:
 
 - Git commit SHA
-- model/config identifier
-- random seed
-- target definition
-- sentence batching protocol
+- protocol and target
 - evaluator version
-- neural-only CER
-- language-model-assisted CER when applicable
-- participant-level mean, median, standard deviation, and/or IQR
+- random seed
 - parameter count
 - peak VRAM
 - training time
-- inference latency
+- neural-only CER
+- participant-level CER statistics
+- LM-assisted CER when applicable
+- status/notes
 
 Raw checkpoints and logs belong under ignored local directories such as `runs/`, `checkpoints/`, or `results/raw/`.
+
+The repository deliberately keeps **historical** and **standardized** measurements separate.
