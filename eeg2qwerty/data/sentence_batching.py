@@ -24,22 +24,19 @@ def _extra(segment: Any) -> dict[str, Any]:
 def sentence_key(
     segment: Any,
     fallback_index: int,
-) -> tuple[str, str]:
+) -> tuple[str, str, str, str]:
     """
-    Return a subject-aware sentence identity.
+    Return a recording-aware sentence identity.
 
-    sentence_UID should not be assumed globally unique across every
-    participant/recording, so subject is included in the key.
+    sentence_UID should not be assumed globally unique across all participants
+    or recordings, so subject/session/task context is included when available.
     """
 
     extra = _extra(segment)
 
-    subject = str(
-        extra.get(
-            "subject",
-            "unknown_subject",
-        )
-    )
+    subject = str(extra.get("subject", "unknown_subject"))
+    session = str(extra.get("session", "unknown_session"))
+    task = str(extra.get("task", extra.get("run", "unknown_task")))
     sentence_uid = str(
         extra.get(
             "sentence_UID",
@@ -47,16 +44,16 @@ def sentence_key(
         )
     )
 
-    return subject, sentence_uid
+    return subject, session, task, sentence_uid
 
 
 class WholeSentenceBatchSampler(Sampler[list[int]]):
     """
     Pack complete sentences into batches bounded by a keystroke budget.
 
-    A normal fixed-size batch can cut a contiguous sentence at the batch
-    boundary. This sampler treats each sentence as an indivisible group.
-    A sentence longer than max_keystrokes is yielded intact by itself.
+    A normal fixed-size batch can cut a contiguous sentence at a batch boundary.
+    This sampler treats each sentence as an indivisible group. A sentence longer
+    than max_keystrokes is yielded intact by itself.
     """
 
     def __init__(
@@ -77,7 +74,7 @@ class WholeSentenceBatchSampler(Sampler[list[int]]):
         self.epoch = 0
 
         groups: OrderedDict[
-            tuple[str, str],
+            tuple[str, str, str, str],
             list[int],
         ] = OrderedDict()
 
@@ -89,6 +86,11 @@ class WholeSentenceBatchSampler(Sampler[list[int]]):
             groups.setdefault(key, []).append(index)
 
         self.groups = list(groups.values())
+        self.sentence_count = len(self.groups)
+        self.longest_sentence = max(
+            (len(group) for group in self.groups),
+            default=0,
+        )
         self._batch_count = self._count_batches(self.groups)
 
     def _ordered_groups(self) -> list[list[int]]:
@@ -152,7 +154,10 @@ def rebuild_with_whole_sentences(
 ) -> DataLoader:
     """
     Reuse an existing dataset/collate function while replacing only its
-    ordinary fixed-size batching with whole-sentence batching.
+    fixed-size batching with whole-sentence batching.
+
+    Worker, collation, memory-pinning, and timeout settings are preserved from
+    the source DataLoader where possible.
     """
 
     dataset = loader.dataset
@@ -168,17 +173,27 @@ def rebuild_with_whole_sentences(
         shuffle_sentences=shuffle_sentences,
     )
 
-    return DataLoader(
-        dataset,
-        batch_sampler=batch_sampler,
-        collate_fn=getattr(dataset, "collate_fn", None),
-        num_workers=loader.num_workers,
-        pin_memory=loader.pin_memory,
-        persistent_workers=(
+    kwargs: dict[str, Any] = {
+        "dataset": dataset,
+        "batch_sampler": batch_sampler,
+        "collate_fn": loader.collate_fn,
+        "num_workers": loader.num_workers,
+        "pin_memory": loader.pin_memory,
+        "timeout": loader.timeout,
+        "worker_init_fn": loader.worker_init_fn,
+        "persistent_workers": (
             loader.persistent_workers
             and loader.num_workers > 0
         ),
-    )
+    }
+
+    if loader.num_workers > 0 and loader.prefetch_factor is not None:
+        kwargs["prefetch_factor"] = loader.prefetch_factor
+
+    if getattr(loader, "multiprocessing_context", None) is not None:
+        kwargs["multiprocessing_context"] = loader.multiprocessing_context
+
+    return DataLoader(**kwargs)
 
 
 def assert_complete_sentences(
@@ -187,12 +202,12 @@ def assert_complete_sentences(
 ) -> dict[str, int]:
     """Check whether any sentence identity appears in multiple batches."""
 
-    seen_in_batch: dict[tuple[str, str], int] = {}
+    seen_in_batch: dict[tuple[str, str, str, str], int] = {}
     duplicate_across_batches = 0
     sentence_instances = 0
 
     for batch_index, batch in enumerate(loader):
-        keys_in_batch: set[tuple[str, str]] = set()
+        keys_in_batch: set[tuple[str, str, str, str]] = set()
 
         for segment_index, segment in enumerate(batch.segments):
             key = sentence_key(
