@@ -24,13 +24,14 @@ python -m pip install -e ".[brain2qwerty]"
 
 git clone https://github.com/facebookresearch/brain2qwerty.git
 cd brain2qwerty
+git checkout 5f9889621d0df391c5aab37c996683d308e6e926
 UPSTREAM_SHA=$(git rev-parse HEAD)
 python -m pip install -e .
 cd ../EEG2Qwerty
 echo "$UPSTREAM_SHA"
 ```
 
-Record that upstream SHA for every reportable run.
+The baseline configs already pin this reviewed upstream revision. Use `--upstream-commit` only when deliberately testing a different upstream revision. See [../UPSTREAM.md](../UPSTREAM.md).
 
 The upstream repository already includes the public `Pinet2024Eeg` study implementation. EEG2Qwerty does not duplicate it.
 
@@ -78,7 +79,6 @@ python scripts/train_standardized_m2.py \
   --data-root /data/SpanishBCBL \
   --cache-root /data/Brain2Qwerty_cache \
   --output-dir results/raw/m2_typed_debug \
-  --upstream-commit "$UPSTREAM_SHA" \
   --num-workers 4 \
   --debug
 ```
@@ -92,8 +92,7 @@ python scripts/train_standardized_m2.py \
   --config configs/m2_whole_sentence_typed.yaml \
   --data-root /data/SpanishBCBL \
   --cache-root /data/Brain2Qwerty_cache \
-  --output-dir results/raw/m2_typed_seed33 \
-  --upstream-commit "$UPSTREAM_SHA"
+  --output-dir results/raw/m2_typed_seed33
 ```
 
 ## 7. Run the paper-aligned intended/reference baseline
@@ -103,8 +102,7 @@ python scripts/train_standardized_m2.py \
   --config configs/m2_whole_sentence_intended.yaml \
   --data-root /data/SpanishBCBL \
   --cache-root /data/Brain2Qwerty_cache \
-  --output-dir results/raw/m2_intended_seed33 \
-  --upstream-commit "$UPSTREAM_SHA"
+  --output-dir results/raw/m2_intended_seed33
 ```
 
 ## 8. Run outputs
