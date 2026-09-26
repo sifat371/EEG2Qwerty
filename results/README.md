@@ -29,3 +29,16 @@ The registry stores:
 The training runner first writes a **candidate** `registry_row.csv` inside the ignored run directory. That row should be copied into the curated registry only after the protocol audit passes.
 
 Raw checkpoints, logs, prediction dumps, and run manifests belong under ignored directories such as `results/raw/`.
+
+
+## Promote an audited candidate
+
+After a full non-debug run and a passing loader-aware protocol audit:
+
+```bash
+python scripts/promote_registry_row.py \
+  --candidate results/raw/m2_typed_seed33/registry_row.csv \
+  --audit results/raw/protocol_audit_with_loaders.json
+```
+
+The promotion command refuses to append a row unless train/validation/test are present, typed reconstruction meets the validation threshold, and every loader reports zero sentences split across batches.
