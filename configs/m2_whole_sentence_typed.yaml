@@ -1,0 +1,41 @@
+schema_version: 1
+name: m2_whole_sentence_typed_baseline
+status: candidate
+
+protocol:
+  dataset: SpanishBCBL
+  modality: EEG
+  alignment: keypress
+  target: typed_key
+  sentence_batching: whole_sentence
+  external_language_model: false
+
+window:
+  start_seconds: -0.2
+  duration_seconds: 0.5
+  resample_hz: 50
+  bandpass_hz: [0.1, 20.0]
+
+model:
+  historical_family: M2
+  width: 192
+  encoder_blocks: 6
+  transformer_layers: 2
+  transformer_heads: 2
+  transformer_ff: 512
+  encoder_dropout: 0.25
+  transformer_dropout: 0.30
+
+training:
+  seed: 33
+  epochs: 60
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  gradient_clip: 1.0
+
+report:
+  - sentence_cer
+  - participant_cer
+  - parameter_count
+  - peak_vram
+  - training_time
