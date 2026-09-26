@@ -1,39 +1,52 @@
 # EEG2Qwerty
 
+[![Public checks](https://github.com/sifat371/EEG2Qwerty/actions/workflows/syntax.yml/badge.svg)](https://github.com/sifat371/EEG2Qwerty/actions/workflows/syntax.yml)
+
 **Scalable neural decoding of typed sentences from EEG**
 
-EEG2Qwerty is an independent research framework for studying neural architectures for **keypress-aligned typed-sentence decoding from non-invasive EEG**. The project builds on the public Brain2Qwerty v1 EEG benchmark and focuses on reproducible evaluation across model accuracy, computational efficiency, and participant-level consistency.
+EEG2Qwerty is an independent research framework for studying neural architectures for **keypress-aligned typed-sentence decoding from non-invasive EEG**. It builds on the public Brain2Qwerty v1 EEG benchmark and separates historical architecture experiments from a cleaner, reproducible evaluation framework.
 
-> **Scope.** The current benchmark uses EEG windows aligned to known keypress events. EEG2Qwerty should not be interpreted as unrestricted continuous thought-to-text decoding.
+> **Scope:** the current benchmark uses EEG windows aligned to known keypress events. EEG2Qwerty is not unrestricted continuous thought-to-text decoding.
 
-## Why this repository exists
+## Public research boundary
 
-This repository serves two purposes:
+This repository contains completed public-facing work, reproducibility infrastructure, and benchmark tooling.
 
-1. **Research record** — preserve completed EEG decoding experiments, including architectures that did not improve the benchmark.
-2. **Reproducible foundation** — provide a clean base for standardized EEG2Qwerty training and evaluation going forward.
+Ongoing unpublished hypotheses, model designs, and planned ablations are intentionally kept outside the public repository until they are ready for release.
 
-The repository intentionally separates historical experiments from future release models. Experimental names such as M0, M1, M2, M3, M4, and G1 record the research lineage; they are **not** product/model-size labels.
+## Quick start
 
-## Current status
+Clone and install the reusable EEG2Qwerty package:
 
-The project is currently standardizing the Brain2Qwerty-v1 EEG evaluation pipeline before promoting any architecture into an official EEG2Qwerty model family.
+```bash
+git clone https://github.com/sifat371/EEG2Qwerty.git
+cd EEG2Qwerty
+python -m pip install -e .
+```
 
-Current work includes:
+Run the lightweight public tests:
 
-- EEG adaptation of the public Brain2Qwerty v1 pipeline
-- compact EEG encoders and contextual decoders
-- subject-conditioned adaptation
-- temporal, spatial, and graph-based ablations
-- sentence-level and participant-level evaluation
-- whole-sentence batching and dataset auditing
-- accuracy/efficiency benchmarking
+```bash
+python -m pip install pytest
+pytest
+```
 
-Unpublished research directions and experimental hypotheses are intentionally maintained outside the public repository until they are ready for release.
+Full Brain2Qwerty EEG reproduction additionally requires the upstream Brain2Qwerty stack and SpanishBCBL data. See [docs/reproduction.md](docs/reproduction.md).
 
-**Migration status:** the repository foundation and historical M0–M2 source are now public. Additional completed, non-sensitive historical experiments are being migrated selectively rather than copying the original development checkout wholesale.
+## What is included
 
-## Historical experiment lineage
+### Reusable public framework
+
+`eeg2qwerty/` currently provides:
+
+- whole-sentence batching utilities
+- character error rate utilities
+- participant-level CER aggregation
+- reusable evaluation helpers
+
+### Historical experiment lineage
+
+`experiments/historical/` preserves source snapshots from completed development experiments:
 
 | Experiment | Approx. parameters | Validation CER | Test CER | Public description |
 |---|---:|---:|---:|---|
@@ -44,22 +57,47 @@ Unpublished research directions and experimental hypotheses are intentionally ma
 | M4 | 6.642M | 73.15% | 72.81% | Residual geometry variant |
 | G1 | — | 72.19% | — | Graph-temporal ablation |
 
-**Important:** these are historical development results produced with an earlier internal pipeline. They are preserved for research provenance and should **not** yet be treated as directly comparable with the final published Brain2Qwerty EEG result. Standardized benchmark results will be reported separately as models are reproduced under the current evaluation protocol. See [docs/history.md](docs/history.md) for the public development lineage.
+**Important:** these are historical development results produced with an earlier internal pipeline. They are preserved for provenance and are **not presented as directly comparable** with the final published Brain2Qwerty EEG result. Standardized results will be reported separately after reproduction under the current benchmark protocol.
+
+See [docs/history.md](docs/history.md).
+
+## Current status
+
+The safe historical migration is complete for M0–M4 and G1.
+
+The public framework is now focused on establishing a standardized Brain2Qwerty-v1-aligned EEG baseline with:
+
+- explicit typed-key versus intended/stimulus target definitions
+- complete-sentence batching/evaluation
+- participant-level reporting
+- reproducibility metadata
+- model-size and compute/resource reporting
+- separation of neural-only and LM-assisted results
+
+A candidate public baseline configuration is available at [configs/m2_whole_sentence_typed.yaml](configs/m2_whole_sentence_typed.yaml). It is a reproducibility template, **not yet a validated standardized result**.
 
 ## Repository layout
 
 ```text
 EEG2Qwerty/
 ├── eeg2qwerty/               # reusable public framework
+│   ├── data/
+│   └── metrics/
 ├── experiments/
-│   └── historical/           # completed architecture lineage
-├── scripts/                  # public data/evaluation entry points
-├── configs/                  # reproducible experiment configuration
-├── results/                  # curated benchmark tables, not raw runs
+│   └── historical/
+│       ├── m0/
+│       ├── m1/
+│       ├── m2/
+│       ├── m3/
+│       ├── m4/
+│       └── g1/
+├── configs/                  # public benchmark candidate configs
+├── scripts/                  # data audit and evaluation CLIs
+├── tests/                    # public framework tests
+├── patches/                  # minimal upstream adaptation record
+├── results/                  # curated result registries
 ├── docs/
-│   ├── benchmark.md
-│   ├── dataset.md
-│   └── reproduction.md
+├── pyproject.toml
 ├── NOTICE
 ├── CITATION.cff
 └── LICENSE
@@ -72,59 +110,81 @@ EEG2Qwerty keeps different evaluation questions separate:
 - **typed-key decoding** versus **intended/stimulus decoding**
 - **neural-only** decoding versus **language-model-assisted** decoding
 - sentence-level metrics versus participant-level aggregation
-- known-participant experiments versus cross-participant experiments
+- known-participant experiments versus held-out-participant experiments
 - historical results versus standardized reproduced results
 
 See [docs/benchmark.md](docs/benchmark.md).
+
+## Public utilities
+
+Once the upstream Brain2Qwerty environment and dataset are available:
+
+```bash
+python scripts/build_all_eeg_events.py \
+  --data-root /path/to/SpanishBCBL
+
+python scripts/audit_eeg_training_events.py \
+  --data-root /path/to/SpanishBCBL \
+  --cache-root /path/to/cache
+```
+
+Evaluate a sentence-prediction CSV containing `subject`, `reference`, and `prediction`:
+
+```bash
+python scripts/evaluate_predictions.py predictions.csv
+```
 
 ## Data
 
 The project uses the public **SpanishBCBL** dataset released for Brain2Qwerty v1. EEG2Qwerty does not redistribute the dataset.
 
-Upstream dataset:
+Dataset:
 
 - https://huggingface.co/datasets/bcbl190626/SpanishBCBL
 
-The data belong to the Basque Center on Cognition, Brain and Language (BCBL). See the upstream Brain2Qwerty project for dataset details and terms.
+The data were collected by and belong to the Basque Center on Cognition, Brain and Language (BCBL). Refer to the upstream project and dataset card for authoritative data documentation and terms.
 
-## Upstream project
+## Upstream project and attribution
 
-EEG2Qwerty is inspired by and partially builds upon the public Brain2Qwerty research code released by Meta FAIR:
+EEG2Qwerty builds on the public Brain2Qwerty research ecosystem released by Meta FAIR:
 
 - Brain2Qwerty: https://github.com/facebookresearch/brain2qwerty
-- Nature Neuroscience paper: *Non-invasive decoding of typed sentences from human brain activity*
+- *Non-invasive decoding of typed sentences from human brain activity*, Nature Neuroscience (2026)
 
-EEG2Qwerty is an **independent research project** and is not affiliated with or endorsed by Meta Platforms, Inc. or BCBL.
+The upstream repository already provides the public `Pinet2024Eeg` SpanishBCBL study implementation; EEG2Qwerty does not duplicate that loader.
+
+EEG2Qwerty is an **independent research project** and is not affiliated with or endorsed by Meta Platforms, Inc., Meta FAIR, or BCBL.
 
 ## Licensing
 
-The upstream Brain2Qwerty source is distributed under **CC BY-NC 4.0**. This repository preserves upstream attribution and uses a compatible non-commercial license for the public research code. Files substantially adapted from upstream should retain their original notices.
+The upstream Brain2Qwerty source is distributed under **CC BY-NC 4.0**. EEG2Qwerty preserves upstream attribution and uses a compatible non-commercial license for the public research code.
+
+Files substantially adapted from upstream remain subject to applicable upstream copyright and license terms.
 
 See [NOTICE](NOTICE) and [LICENSE](LICENSE).
 
-## Reproducibility
+## Reproducibility policy
 
-Historical code is retained as historical code. Going forward, reportable experiments should record at least:
+A standardized reportable experiment should record at least:
 
-- commit SHA
+- EEG2Qwerty commit SHA
+- upstream Brain2Qwerty commit SHA
 - dataset split/protocol
 - target definition
+- sentence batching strategy
 - evaluator version
-- random seed
+- config and random seed
 - parameter count
 - peak VRAM
-- training/inference cost
+- training time
 - sentence CER
 - participant-level CER statistics
+- language-model stage, if any
 
-The curated registry lives under [results/](results/).
-
-## Project direction
-
-EEG2Qwerty is intended to support architectures spanning compact to higher-capacity models. Public model-family names will be assigned only after candidates are reproduced under the standardized benchmark and their accuracy/resource trade-offs are measured.
+The registry schema lives in [results/experiment_registry.csv](results/experiment_registry.csv).
 
 ---
 
 ### Research integrity note
 
-This repository documents completed public-facing work. Ongoing unpublished hypotheses, model designs, and planned ablations are intentionally not disclosed here.
+Historical measurements are retained rather than silently rewritten. Standardized reproductions should be added alongside them so the public record distinguishes what was originally observed from what is later reproduced under the corrected benchmark.
