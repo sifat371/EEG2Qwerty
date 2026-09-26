@@ -4,10 +4,15 @@ import argparse
 import json
 from pathlib import Path
 
-from eeg2qwerty.data.brain2qwerty_v1 import (\n    build_upstream_eeg_events,\n    build_upstream_eeg_loaders,\n)\nfrom eeg2qwerty.data.sentence_batching import assert_complete_sentences\nfrom eeg2qwerty.data.protocol import (
+from eeg2qwerty.data.brain2qwerty_v1 import (
+    build_upstream_eeg_events,
+    build_upstream_eeg_loaders,
+)
+from eeg2qwerty.data.protocol import (
     audit_sentence_rows,
     sentence_group_columns,
 )
+from eeg2qwerty.data.sentence_batching import assert_complete_sentences
 
 
 def parse_args() -> argparse.Namespace:
@@ -19,6 +24,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--max-typographical-errors", type=int, default=10)
+    parser.add_argument("--check-loaders", action="store_true")
+    parser.add_argument("--train-batch-keystrokes", type=int, default=256)
+    parser.add_argument("--eval-batch-keystrokes", type=int, default=512)
+    parser.add_argument("--num-workers", type=int, default=8)
     return parser.parse_args()
 
 
@@ -38,9 +47,12 @@ def _canonical_typed_metadata(value: object) -> str:
 def main() -> None:
     args = parse_args()
 
+    data_root = args.data_root.expanduser().resolve()
+    cache_root = args.cache_root.expanduser().resolve()
+
     _, events = build_upstream_eeg_events(
-        data_root=args.data_root.expanduser().resolve(),
-        cache_root=args.cache_root.expanduser().resolve(),
+        data_root=data_root,
+        cache_root=cache_root,
         debug=args.debug,
     )
 
@@ -143,6 +155,27 @@ def main() -> None:
             ),
             "typed_mismatch_examples": examples,
         }
+
+    if args.check_loaders:
+        loaders, _ = build_upstream_eeg_loaders(
+            data_root=data_root,
+            cache_root=cache_root,
+            train_batch_keystrokes=args.train_batch_keystrokes,
+            eval_batch_keystrokes=args.eval_batch_keystrokes,
+            num_workers=args.num_workers,
+            seed=33,
+            debug=args.debug,
+            max_typographical_errors=args.max_typographical_errors,
+        )
+        loader_audit = {}
+        for split, loader in loaders.items():
+            stats = assert_complete_sentences(loader)
+            loader_audit[split] = stats
+            if stats["sentences_split_across_batches"] != 0:
+                raise RuntimeError(
+                    f"{split} still splits sentences across loader batches."
+                )
+        payload["whole_sentence_loader_audit"] = loader_audit
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     rendered = json.dumps(payload, indent=2, sort_keys=True)
