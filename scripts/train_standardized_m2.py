@@ -44,8 +44,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--debug", action="store_true")
     parser.add_argument(
         "--upstream-commit",
-        default="unknown",
-        help="Brain2Qwerty commit SHA used for this run.",
+        default=None,
+        help="Optional override of the pinned Brain2Qwerty commit in the config.",
     )
     return parser.parse_args()
 
@@ -147,6 +147,11 @@ def main() -> None:
 
     target_mode = args.target_mode or protocol["target"]
     max_typographical_errors = protocol.get("max_typographical_errors")
+    upstream_commit = (
+        args.upstream_commit
+        or config.get("upstream", {}).get("commit")
+        or "unknown"
+    )
 
     seed = int(training["seed"])
     pl.seed_everything(seed, workers=True)
@@ -277,7 +282,7 @@ def main() -> None:
         "experiment": config.get("name", args.config.stem),
         "status": "debug" if args.debug else "candidate_reproduction",
         "eeg2qwerty_commit": commit_sha,
-        "upstream_brain2qwerty_commit": args.upstream_commit,
+        "upstream_brain2qwerty_commit": upstream_commit,
         "config": str(args.config),
         "target_mode": target_mode,
         "max_typographical_errors": max_typographical_errors,
@@ -303,7 +308,7 @@ def main() -> None:
         args.output_dir,
         config_name=str(config.get("name", args.config.stem)),
         commit_sha=commit_sha,
-        upstream_commit_sha=args.upstream_commit,
+        upstream_commit_sha=upstream_commit,
         target_mode=target_mode,
         seed=seed,
         parameters=parameters,
