@@ -1,1 +1,1 @@
-experiment,commit_sha,upstream_commit_sha,protocol,target,evaluator,seed,parameters,hardware,peak_vram_gb,train_time_seconds,neural_cer,participant_mean_cer,participant_median_cer,participant_sd_cer,lm_assisted_cer,status,notes
+experiment,commit_sha,upstream_commit_sha,config,protocol,target,max_typographical_errors,evaluator,seed,parameters,hardware,peak_vram_gb,train_time_seconds,neural_cer,participant_mean_cer,participant_median_cer,participant_sd_cer,lm_assisted_cer,status,notes
