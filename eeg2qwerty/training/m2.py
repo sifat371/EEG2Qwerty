@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import csv
 from collections import OrderedDict
+from pathlib import Path
 from typing import Any
 
 import lightning.pytorch as pl
@@ -290,9 +292,35 @@ class StandardizedM2Module(pl.LightningModule):
         if self._val_records:
             self._log_cer_summary("val", self._val_records)
 
+    def _write_prediction_csv(
+        self,
+        records: list[PredictionRecord],
+        filename: str,
+    ) -> None:
+        output = Path(self.trainer.default_root_dir) / filename
+        output.parent.mkdir(parents=True, exist_ok=True)
+        with output.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(
+                handle,
+                fieldnames=["subject", "reference", "prediction"],
+            )
+            writer.writeheader()
+            for record in records:
+                writer.writerow(
+                    {
+                        "subject": record.subject,
+                        "reference": record.reference,
+                        "prediction": record.prediction,
+                    }
+                )
+
     def on_test_epoch_end(self) -> None:
         if self._test_records:
             self._log_cer_summary("test", self._test_records)
+            self._write_prediction_csv(
+                self._test_records,
+                "test_predictions.csv",
+            )
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(
