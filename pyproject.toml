@@ -33,6 +33,7 @@ dependencies = [
 [project.optional-dependencies]
 test = [
   "pytest>=8",
+  "pandas>=2.2,<2.3",
 ]
 brain2qwerty = [
   "lightning>=2.5,<2.6",
