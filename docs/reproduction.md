@@ -158,3 +158,16 @@ Promote it to `standardized` only after:
 6. any external language-model stage is reported separately.
 
 Historical numbers remain in `historical_results.csv`; do not overwrite them with standardized reproductions.
+
+
+## 11. Promote the audited result
+
+After the full loader-aware audit passes:
+
+```bash
+python scripts/promote_registry_row.py \
+  --candidate results/raw/m2_typed_seed33/registry_row.csv \
+  --audit results/raw/protocol_audit_with_loaders.json
+```
+
+This is the only supported path from `candidate_reproduction` to `standardized` in the public result registry.
