@@ -23,3 +23,6 @@ Recorded historical result:
 This is a historical source snapshot. The training script retains original package/import assumptions from the development checkout and is not yet part of the standardized EEG2Qwerty benchmark runner.
 
 The CER values above were produced with the earlier internal evaluation pipeline.
+
+
+Only the original machine-specific output directory was replaced with a repository-relative path during public migration; the model/training logic is otherwise preserved as the historical snapshot.
