@@ -4,49 +4,59 @@
 
 **Scalable neural decoding of typed sentences from EEG**
 
-EEG2Qwerty is an independent research framework for studying neural architectures for **keypress-aligned typed-sentence decoding from non-invasive EEG**. It builds on the public Brain2Qwerty v1 EEG benchmark and separates historical architecture experiments from a cleaner, reproducible evaluation framework.
+EEG2Qwerty is an independent research framework for **keypress-aligned typed-sentence decoding from non-invasive EEG**. It builds on the public Brain2Qwerty v1 EEG benchmark while separating historical architecture experiments from a standardized, reproducible public baseline.
 
-> **Scope:** the current benchmark uses EEG windows aligned to known keypress events. EEG2Qwerty is not unrestricted continuous thought-to-text decoding.
+> **Scope:** the current task uses EEG windows aligned to known keypress events. EEG2Qwerty is not unrestricted continuous thought-to-text decoding.
 
 ## Public research boundary
 
-This repository contains completed public-facing work, reproducibility infrastructure, and benchmark tooling.
-
-Ongoing unpublished hypotheses, model designs, and planned ablations are intentionally kept outside the public repository until they are ready for release.
+This repository contains completed public-facing work, reproducibility infrastructure, and benchmark tooling. Ongoing unpublished hypotheses, model designs, and planned ablations are kept outside the public repository until they are ready for release.
 
 ## Quick start
-
-Clone and install the reusable EEG2Qwerty package:
 
 ```bash
 git clone https://github.com/sifat371/EEG2Qwerty.git
 cd EEG2Qwerty
 python -m pip install -e .
-```
-
-Run the lightweight public tests:
-
-```bash
 python -m pip install pytest
 pytest
 ```
 
-Full Brain2Qwerty EEG reproduction additionally requires the upstream Brain2Qwerty stack and SpanishBCBL data. See [docs/reproduction.md](docs/reproduction.md).
+Full EEG reproduction/training additionally requires the upstream Brain2Qwerty stack and SpanishBCBL data. See [docs/reproduction.md](docs/reproduction.md).
 
-## What is included
+## Current public status
 
-### Reusable public framework
+The safe historical migration is complete for **M0, M1, M2, M3, M4, and G1**.
 
-`eeg2qwerty/` currently provides:
+The standardized public foundation now includes:
 
-- whole-sentence batching utilities
-- character error rate utilities
-- participant-level CER aggregation
-- reusable evaluation helpers
+- whole-sentence batching
+- SequenceMatcher target alignment
+- optional paper-stated typo-error filtering
+- typed-key and intended/reference target protocols
+- standardized M2 implementation under `eeg2qwerty/models/`
+- participant-level and pooled CER
+- train/validation/test protocol audit
+- loader-level sentence-integrity verification
+- runnable standardized M2 training CLI
+- prediction export
+- run manifests and candidate registry rows
+- package tests and GitHub CI
 
-### Historical experiment lineage
+No standardized CER is claimed yet because the full SpanishBCBL GPU run must be executed on the actual dataset/hardware and then promoted after audit.
 
-`experiments/historical/` preserves source snapshots from completed development experiments:
+## Two public baseline protocols
+
+| Config | Training target | Typo filter | Purpose |
+|---|---|---:|---|
+| [m2_whole_sentence_typed.yaml](configs/m2_whole_sentence_typed.yaml) | observed pressed key | off by default | released-code-aligned typed-key baseline |
+| [m2_whole_sentence_intended.yaml](configs/m2_whole_sentence_intended.yaml) | SequenceMatcher-aligned reference character | >10 errors removed | paper-aligned intended/reference baseline |
+
+The current public Brain2Qwerty v1 code encodes the observed `button` field as its feature target, while the 2026 paper describes SequenceMatcher-based typographical-error alignment. EEG2Qwerty therefore reports these as separate protocols rather than silently treating them as identical.
+
+See [docs/benchmark.md](docs/benchmark.md).
+
+## Historical experiment lineage
 
 | Experiment | Approx. parameters | Validation CER | Test CER | Public description |
 |---|---:|---:|---:|---|
@@ -57,32 +67,54 @@ Full Brain2Qwerty EEG reproduction additionally requires the upstream Brain2Qwer
 | M4 | 6.642M | 73.15% | 72.81% | Residual geometry variant |
 | G1 | — | 72.19% | — | Graph-temporal ablation |
 
-**Important:** these are historical development results produced with an earlier internal pipeline. They are preserved for provenance and are **not presented as directly comparable** with the final published Brain2Qwerty EEG result. Standardized results will be reported separately after reproduction under the current benchmark protocol.
+**Important:** these are historical development results from the earlier internal pipeline. They are preserved for provenance and are **not presented as directly comparable** with the final published Brain2Qwerty EEG result.
 
-See [docs/history.md](docs/history.md).
+## Run the standardized protocol audit
 
-## Current status
+```bash
+python scripts/audit_standardized_protocol.py \
+  --data-root /path/to/SpanishBCBL \
+  --cache-root /path/to/cache \
+  --max-typographical-errors 10 \
+  --check-loaders \
+  --output results/raw/protocol_audit.json
+```
 
-The safe historical migration is complete for M0–M4 and G1.
+## Run the standardized M2 baseline
 
-The public framework is now focused on establishing a standardized Brain2Qwerty-v1-aligned EEG baseline with:
+Typed-key protocol:
 
-- explicit typed-key versus intended/stimulus target definitions
-- complete-sentence batching/evaluation
-- participant-level reporting
-- reproducibility metadata
-- model-size and compute/resource reporting
-- separation of neural-only and LM-assisted results
+```bash
+python scripts/train_standardized_m2.py \
+  --config configs/m2_whole_sentence_typed.yaml \
+  --data-root /path/to/SpanishBCBL \
+  --cache-root /path/to/cache \
+  --output-dir results/raw/m2_typed_seed33 \
+  --upstream-commit <BRAIN2QWERTY_SHA>
+```
 
-A candidate public baseline configuration is available at [configs/m2_whole_sentence_typed.yaml](configs/m2_whole_sentence_typed.yaml). It is a reproducibility template, **not yet a validated standardized result**.
+Intended/reference protocol:
+
+```bash
+python scripts/train_standardized_m2.py \
+  --config configs/m2_whole_sentence_intended.yaml \
+  --data-root /path/to/SpanishBCBL \
+  --cache-root /path/to/cache \
+  --output-dir results/raw/m2_intended_seed33 \
+  --upstream-commit <BRAIN2QWERTY_SHA>
+```
+
+Each run writes checkpoints, sentence predictions, a JSON run manifest, and a candidate registry row.
 
 ## Repository layout
 
 ```text
 EEG2Qwerty/
-├── eeg2qwerty/               # reusable public framework
+├── eeg2qwerty/
 │   ├── data/
-│   └── metrics/
+│   ├── metrics/
+│   ├── models/
+│   └── training/
 ├── experiments/
 │   └── historical/
 │       ├── m0/
@@ -91,11 +123,11 @@ EEG2Qwerty/
 │       ├── m3/
 │       ├── m4/
 │       └── g1/
-├── configs/                  # public benchmark candidate configs
-├── scripts/                  # data audit and evaluation CLIs
-├── tests/                    # public framework tests
-├── patches/                  # minimal upstream adaptation record
-├── results/                  # curated result registries
+├── configs/
+├── scripts/
+├── tests/
+├── patches/
+├── results/
 ├── docs/
 ├── pyproject.toml
 ├── NOTICE
@@ -103,88 +135,26 @@ EEG2Qwerty/
 └── LICENSE
 ```
 
-## Benchmark principles
-
-EEG2Qwerty keeps different evaluation questions separate:
-
-- **typed-key decoding** versus **intended/stimulus decoding**
-- **neural-only** decoding versus **language-model-assisted** decoding
-- sentence-level metrics versus participant-level aggregation
-- known-participant experiments versus held-out-participant experiments
-- historical results versus standardized reproduced results
-
-See [docs/benchmark.md](docs/benchmark.md).
-
-## Public utilities
-
-Once the upstream Brain2Qwerty environment and dataset are available:
-
-```bash
-python scripts/build_all_eeg_events.py \
-  --data-root /path/to/SpanishBCBL
-
-python scripts/audit_eeg_training_events.py \
-  --data-root /path/to/SpanishBCBL \
-  --cache-root /path/to/cache
-```
-
-Evaluate a sentence-prediction CSV containing `subject`, `reference`, and `prediction`:
-
-```bash
-python scripts/evaluate_predictions.py predictions.csv
-```
-
 ## Data
 
-The project uses the public **SpanishBCBL** dataset released for Brain2Qwerty v1. EEG2Qwerty does not redistribute the dataset.
+EEG2Qwerty uses the public **SpanishBCBL** data released for Brain2Qwerty v1 and does not redistribute it.
 
-Dataset:
+- Dataset: https://huggingface.co/datasets/bcbl190626/SpanishBCBL
+- Upstream Brain2Qwerty: https://github.com/facebookresearch/brain2qwerty
+- Nature Neuroscience paper: *Non-invasive decoding of typed sentences from human brain activity* (2026)
 
-- https://huggingface.co/datasets/bcbl190626/SpanishBCBL
+The data were collected by and belong to BCBL. Refer to the upstream project and dataset card for authoritative terms.
 
-The data were collected by and belong to the Basque Center on Cognition, Brain and Language (BCBL). Refer to the upstream project and dataset card for authoritative data documentation and terms.
+## Licensing and attribution
 
-## Upstream project and attribution
+The upstream Brain2Qwerty source is distributed under **CC BY-NC 4.0**. EEG2Qwerty preserves upstream attribution and uses a compatible non-commercial license for its public research code.
 
-EEG2Qwerty builds on the public Brain2Qwerty research ecosystem released by Meta FAIR:
+EEG2Qwerty is independent and is not affiliated with or endorsed by Meta Platforms, Inc., Meta FAIR, or BCBL.
 
-- Brain2Qwerty: https://github.com/facebookresearch/brain2qwerty
-- *Non-invasive decoding of typed sentences from human brain activity*, Nature Neuroscience (2026)
-
-The upstream repository already provides the public `Pinet2024Eeg` SpanishBCBL study implementation; EEG2Qwerty does not duplicate that loader.
-
-EEG2Qwerty is an **independent research project** and is not affiliated with or endorsed by Meta Platforms, Inc., Meta FAIR, or BCBL.
-
-## Licensing
-
-The upstream Brain2Qwerty source is distributed under **CC BY-NC 4.0**. EEG2Qwerty preserves upstream attribution and uses a compatible non-commercial license for the public research code.
-
-Files substantially adapted from upstream remain subject to applicable upstream copyright and license terms.
-
-See [NOTICE](NOTICE) and [LICENSE](LICENSE).
-
-## Reproducibility policy
-
-A standardized reportable experiment should record at least:
-
-- EEG2Qwerty commit SHA
-- upstream Brain2Qwerty commit SHA
-- dataset split/protocol
-- target definition
-- sentence batching strategy
-- evaluator version
-- config and random seed
-- parameter count
-- peak VRAM
-- training time
-- sentence CER
-- participant-level CER statistics
-- language-model stage, if any
-
-The registry schema lives in [results/experiment_registry.csv](results/experiment_registry.csv).
+See [NOTICE](NOTICE), [LICENSE](LICENSE), and [docs/reproduction.md](docs/reproduction.md).
 
 ---
 
 ### Research integrity note
 
-Historical measurements are retained rather than silently rewritten. Standardized reproductions should be added alongside them so the public record distinguishes what was originally observed from what is later reproduced under the corrected benchmark.
+Historical measurements are retained rather than silently rewritten. A new run is recorded as `debug` or `candidate_reproduction` first and is promoted to the curated standardized registry only after protocol and provenance review.
