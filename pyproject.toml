@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eeg2qwerty"
+version = "0.1.0.dev0"
+description = "Public research framework for keypress-aligned EEG typed-sentence decoding."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Md Sifat" },
+]
+keywords = [
+  "EEG",
+  "brain-computer interface",
+  "neural decoding",
+  "typed sentence decoding",
+  "Brain2Qwerty",
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "torch>=2.6",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8",
+]
+brain2qwerty = [
+  "lightning>=2.5,<2.6",
+  "neuralset==0.2.2",
+  "neuraltrain==0.2.2",
+  "x-transformers>=2.4,<2.5",
+  "mne>=1.11,<1.12",
+  "numpy>=2.2,<2.3",
+  "pandas>=2.2,<2.3",
+  "scikit-learn>=1.8,<1.9",
+  "dtw-python>=1.7,<1.8",
+]
+
+[project.urls]
+Repository = "https://github.com/sifat371/EEG2Qwerty"
+Upstream = "https://github.com/facebookresearch/brain2qwerty"
+
+[tool.setuptools.packages.find]
+include = ["eeg2qwerty*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 90
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
