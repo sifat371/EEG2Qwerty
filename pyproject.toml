@@ -44,6 +44,7 @@ brain2qwerty = [
   "pandas>=2.2,<2.3",
   "scikit-learn>=1.8,<1.9",
   "dtw-python>=1.7,<1.8",
+  "pyyaml>=6,<7",
 ]
 
 [project.urls]
