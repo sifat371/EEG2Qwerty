@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 name: m2_whole_sentence_typed_baseline
 status: candidate
 
@@ -9,6 +9,9 @@ protocol:
   target: typed_key
   sentence_batching: whole_sentence
   external_language_model: false
+  # Set to null to reproduce the current released-code typed-key event set.
+  # Set to 10 for the paper-stated typographical-error sentence filter.
+  max_typographical_errors: null
 
 window:
   start_seconds: -0.2
@@ -29,13 +32,19 @@ model:
 training:
   seed: 33
   epochs: 60
+  patience: 12
+  train_batch_keystrokes: 256
+  eval_batch_keystrokes: 512
   learning_rate: 0.0003
   weight_decay: 0.01
   gradient_clip: 1.0
 
 report:
-  - sentence_cer
-  - participant_cer
-  - parameter_count
-  - peak_vram
-  - training_time
+  primary_metric: participant_mean_cer
+  additional_metrics:
+    - pooled_cer
+    - participant_median_cer
+    - participant_sd_cer
+    - parameter_count
+    - peak_vram
+    - training_time
