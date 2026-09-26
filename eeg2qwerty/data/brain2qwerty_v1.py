@@ -6,6 +6,7 @@ from typing import Any
 import torch
 from torch.utils.data import DataLoader
 
+from .protocol import apply_typo_error_filter
 from .sentence_batching import WholeSentenceBatchSampler
 
 
@@ -105,6 +106,7 @@ def build_upstream_eeg_loaders(
     num_workers: int = 8,
     seed: int = 33,
     debug: bool = False,
+    max_typographical_errors: int | None = None,
 ) -> tuple[dict[str, DataLoader], Any]:
     """
     Build EEG loaders while fixing two public-v1 integration details:
@@ -137,6 +139,12 @@ def build_upstream_eeg_loaders(
     data = Data(**data_config)
 
     events = data.build_events()
+    if max_typographical_errors is not None:
+        events = apply_typo_error_filter(
+            events,
+            max_errors=max_typographical_errors,
+        )
+
     data.neuro.prepare(events)
     data.feature.prepare(events)
 
