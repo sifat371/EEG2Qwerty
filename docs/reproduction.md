@@ -1,8 +1,6 @@
 # Reproduction Notes
 
-## Installation
-
-The reusable public package can be installed directly from a clone:
+## 1. Install EEG2Qwerty
 
 ```bash
 git clone https://github.com/sifat371/EEG2Qwerty.git
@@ -10,72 +8,155 @@ cd EEG2Qwerty
 python -m pip install -e .
 ```
 
-For development/tests:
+For tests:
 
 ```bash
 python -m pip install pytest
 pytest
 ```
 
-## Upstream Brain2Qwerty environment
+## 2. Install the upstream Brain2Qwerty stack
 
-The EEG reproduction utilities intentionally depend on the public upstream Brain2Qwerty stack rather than copying that repository into EEG2Qwerty.
-
-The current upstream repository already contains the public `Pinet2024Eeg` SpanishBCBL study implementation. EEG2Qwerty therefore does not duplicate that study loader.
-
-Install upstream Brain2Qwerty separately when running the EEG data/reproduction scripts:
+The EEG data utilities and standardized training runner intentionally depend on the public upstream Brain2Qwerty/NeuralSet stack rather than copying that repository into EEG2Qwerty.
 
 ```bash
-python -m pip install "eeg2qwerty[brain2qwerty]"
-python -m pip install "git+https://github.com/facebookresearch/brain2qwerty.git"
+python -m pip install -e ".[brain2qwerty]"
+
+git clone https://github.com/facebookresearch/brain2qwerty.git
+cd brain2qwerty
+UPSTREAM_SHA=$(git rev-parse HEAD)
+python -m pip install -e .
+cd ../EEG2Qwerty
+echo "$UPSTREAM_SHA"
 ```
 
-For strict reproduction work, record the exact upstream Brain2Qwerty commit SHA alongside the EEG2Qwerty commit SHA.
+Record that upstream SHA for every reportable run.
 
-## Historical experiments
+The upstream repository already includes the public `Pinet2024Eeg` study implementation. EEG2Qwerty does not duplicate it.
 
-The source under `experiments/historical/` preserves completed development snapshots separately from the standardized framework.
+## 3. Prepare SpanishBCBL
 
-Historical scripts were originally run inside a local Brain2Qwerty checkout and may retain imports such as `brain2qwerty_v1` or the former `liteqwerty_eeg` package namespace. They are intentionally not rewritten to masquerade as new standardized implementations.
+EEG2Qwerty does not redistribute the dataset.
 
-Historical results should be interpreted as development records, not final benchmark numbers.
+After obtaining the public SpanishBCBL data, keep it outside the Git repository, for example:
 
-## Public EEG utilities
+```text
+/data/SpanishBCBL
+/data/Brain2Qwerty_cache
+```
 
-The path-agnostic utilities under `scripts/` can be run once the upstream Brain2Qwerty environment and SpanishBCBL data are available.
+## 4. Audit the final sentence/target protocol
 
-For example:
+Metadata-only audit:
 
 ```bash
-python scripts/build_all_eeg_events.py \
-  --data-root /path/to/SpanishBCBL
-
-python scripts/audit_eeg_training_events.py \
-  --data-root /path/to/SpanishBCBL \
-  --cache-root /path/to/cache
+python scripts/audit_standardized_protocol.py \
+  --data-root /data/SpanishBCBL \
+  --cache-root /data/Brain2Qwerty_cache \
+  --max-typographical-errors 10 \
+  --output results/raw/protocol_audit.json
 ```
 
-## Prediction evaluation
-
-A sentence-prediction CSV containing `subject`, `reference`, and `prediction` columns can be summarized with:
+Full loader-integrity audit:
 
 ```bash
-python scripts/evaluate_predictions.py predictions.csv \
-  --output results/raw/prediction_metrics.json
+python scripts/audit_standardized_protocol.py \
+  --data-root /data/SpanishBCBL \
+  --cache-root /data/Brain2Qwerty_cache \
+  --max-typographical-errors 10 \
+  --check-loaders \
+  --output results/raw/protocol_audit_with_loaders.json
 ```
 
-The evaluator reports pooled CER plus participant-level CER distribution statistics.
+The full audit raises an error if any sentence appears across multiple batches.
 
-## Reproduction policy
+## 5. Debug the standardized typed-key baseline
 
-A result should be promoted from **historical** to **standardized** only after:
+```bash
+python scripts/train_standardized_m2.py \
+  --config configs/m2_whole_sentence_typed.yaml \
+  --data-root /data/SpanishBCBL \
+  --cache-root /data/Brain2Qwerty_cache \
+  --output-dir results/raw/m2_typed_debug \
+  --upstream-commit "$UPSTREAM_SHA" \
+  --num-workers 4 \
+  --debug
+```
 
-1. the dataset/split and target protocol are documented,
-2. complete-sentence batching/evaluation is used,
-3. the exact EEG2Qwerty and upstream Brain2Qwerty commit SHAs are recorded,
-4. config and random seed are recorded,
-5. participant-level metrics are retained,
-6. compute/resource metadata are recorded,
-7. the run can be reproduced from the public code.
+A debug run is recorded with status `debug` and must not be copied into the curated result registry.
 
-Candidate public configurations live under `configs/`; a config does not by itself imply a validated result.
+## 6. Run the standardized typed-key baseline
+
+```bash
+python scripts/train_standardized_m2.py \
+  --config configs/m2_whole_sentence_typed.yaml \
+  --data-root /data/SpanishBCBL \
+  --cache-root /data/Brain2Qwerty_cache \
+  --output-dir results/raw/m2_typed_seed33 \
+  --upstream-commit "$UPSTREAM_SHA"
+```
+
+## 7. Run the paper-aligned intended/reference baseline
+
+```bash
+python scripts/train_standardized_m2.py \
+  --config configs/m2_whole_sentence_intended.yaml \
+  --data-root /data/SpanishBCBL \
+  --cache-root /data/Brain2Qwerty_cache \
+  --output-dir results/raw/m2_intended_seed33 \
+  --upstream-commit "$UPSTREAM_SHA"
+```
+
+## 8. Run outputs
+
+Each non-debug training run writes:
+
+```text
+best-cer.ckpt
+best-loss.ckpt
+last.ckpt
+test_predictions.csv
+run_summary.json
+registry_row.csv
+logs/
+```
+
+The run summary records:
+
+- EEG2Qwerty commit
+- upstream Brain2Qwerty commit
+- target protocol
+- typo threshold
+- seed
+- parameter count
+- split keystroke counts
+- hardware
+- precision
+- peak VRAM
+- training/test runtime
+- participant-level CER metrics
+- pooled CER
+- checkpoint paths
+
+## 9. Independently evaluate exported predictions
+
+```bash
+python scripts/evaluate_predictions.py \
+  results/raw/m2_typed_seed33/test_predictions.csv \
+  --output results/raw/m2_typed_seed33/prediction_metrics.json
+```
+
+## 10. Promote a result into the curated registry
+
+The training script writes `registry_row.csv` with status `candidate_reproduction`.
+
+Promote it to `standardized` only after:
+
+1. the final protocol audit passed,
+2. no sentence is split across loader batches,
+3. commit/config/seed provenance is complete,
+4. participant-level metrics were inspected,
+5. the row corresponds to a full non-debug run,
+6. any external language-model stage is reported separately.
+
+Historical numbers remain in `historical_results.csv`; do not overwrite them with standardized reproductions.
