@@ -93,10 +93,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path(
-            "/home/motion/Brain2Qwerty_results/"
-            "liteqwerty_transformer_seed33"
-        ),
+        default=Path("results/historical/m1"),
     )
 
     return parser.parse_args()
