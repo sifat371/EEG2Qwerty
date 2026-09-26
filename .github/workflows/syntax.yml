@@ -1,4 +1,4 @@
-name: Syntax checks
+name: Public checks
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  compile:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,8 +16,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
-      - name: Compile public Python sources
+      - name: Install lightweight test environment
         run: |
-          python -m compileall -q eeg2qwerty scripts experiments/historical/m0 experiments/historical/m1 experiments/historical/m2
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e . --no-deps
+
+      - name: Compile public and historical Python sources
+        run: |
+          python -m compileall -q eeg2qwerty scripts experiments/historical
+
+      - name: Run unit tests
+        run: |
+          pytest
