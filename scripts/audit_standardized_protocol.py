@@ -4,8 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from eeg2qwerty.data.brain2qwerty_v1 import build_upstream_eeg_events
-from eeg2qwerty.data.protocol import (
+from eeg2qwerty.data.brain2qwerty_v1 import (\n    build_upstream_eeg_events,\n    build_upstream_eeg_loaders,\n)\nfrom eeg2qwerty.data.sentence_batching import assert_complete_sentences\nfrom eeg2qwerty.data.protocol import (
     audit_sentence_rows,
     sentence_group_columns,
 )
