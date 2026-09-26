@@ -94,7 +94,8 @@ def apply_typo_error_filter(
             keep_keys.add(tuple(key))
 
     keys = events[group_columns].apply(lambda row: tuple(row.tolist()), axis=1)
-    mask = keys.isin(keep_keys)
+    sentence_associated = events["sentence_UID"].notna()
+    mask = ~sentence_associated | keys.isin(keep_keys)
 
     filtered = events.loc[mask].copy()
     filtered.attrs.update(events.attrs)
